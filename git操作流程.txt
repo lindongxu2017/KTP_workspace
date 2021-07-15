@@ -1,0 +1,9 @@
+git config --global user.name "账号名称"
+git config --global user.email "邮箱"
+
+git init
+git remote add origin http://192.168.11.172/steven/pythongroups.git
+git checkout -b 分支名称
+git add .
+git commit -m "Initial commit"
+git push -u origin 分支名称
