@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>摄像头测试</title>
+  <style>
+    .flex {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flex-1 {
+      flex: 1;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .item {
+      background-color: #f2f6fc;
+      width: 200px;
+      height: 150px;
+      border-radius: 10px;
+      text-align: center;
+      line-height: 150px;
+      color: #b9b9b9;
+      margin: 0 auto;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      margin: 0 auto;
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    video {
+      margin: 0 auto;
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    .upload-wrapper {
+      min-width: 150px;
+      text-align: center;
+    }
+
+    .form-wrapper {
+      font-size: 0;
+      margin-top: 50px;
+      margin-bottom: 20px;
+    }
+
+    .form-wrapper .form-item {
+      width: 320px;
+      display: inline-block;
+      margin-right: 60px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .form-wrapper .half {
+      width: 40%;
+    }
+
+    .form-item .label {
+      width: 100px;
+      display: inline-block;
+      vertical-align: baseline;
+      text-align: right;
+      margin-right: 10px;
+    }
+
+    .form-item .control {
+      width: auto;
+      display: inline-block;
+      vertical-align: baseline;
+    }
+
+    .form-item.half .control {
+      width: calc(100% - 153px);
+      min-width: 220px;
+    }
+
+    .form-item.half .control input {
+      width: 100%;
+    }
+
+    .form-wrapper .half-half {
+      width: 40%;
+    }
+
+    i {
+      color: #f56c6c;
+      margin-right: 5px;
+    }
+
+    .avatar {
+      display: inline-block;
+      width: 120px;
+      height: 140px;
+      border-radius: 10px;
+      color: #b9b9b9;
+      text-align: center;
+      line-height: 140px;
+      background-color: #f2f6fc;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root">
+    <div class="flex">
+      <div class="flex-1 text-center">
+        <div v-show="videoVisiabled == 0" class="item">未检测到影像</div>
+        <video v-show="videoVisiabled == 1" width="200" height="150"></video>
+        <button id="start">打开摄像头</button>
+      </div>
+      <div class="flex-1 text-center">
+        <div v-show="visiabled_1 == 0" class="item">人脸采集</div>
+        <canvas id="canvas-1" v-show="visiabled_1 == 1" width="200" height="150"></canvas>
+        <button @click="snap(1)">采集</button>
+      </div>
+      <div class="flex-1 text-center">
+        <div v-show="visiabled_2 == 0" class="item">正面采集</div>
+        <canvas id="canvas-2" v-show="visiabled_2 == 1" width="200" height="150"></canvas>
+        <button @click="snap(2)">采集</button>
+      </div>
+      <div class="flex-1 text-center">
+        <div v-show="visiabled_3 == 0" class="item">背面采集</div>
+        <canvas id="canvas-3" v-show="visiabled_3 == 1" width="200" height="150"></canvas>
+        <button @click="snap(3)">采集</button>
+      </div>
+    </div>
+    <div class="flex">
+      <div class="form-wrapper">
+        <div class="form-item">
+          <div class="label"><i>*</i> 姓名</div>
+          <div class="control">
+            <input type="text" disabled placeholder="姓名" v-model="IDCARDINFO.realName">
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label"><i>*</i> 性别</div>
+          <div class="control">
+            <input type="radio" v-model="IDCARDINFO.gender" id="male" value="1" disabled>
+            <label for="male">男</label>
+            <input type="radio" v-model="IDCARDINFO.gender" id="female" value="2" disabled>
+            <label for="female">女</label>
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label"><i>*</i> 出生日期</div>
+          <div class="control">
+            <input type="date" disabled v-model="IDCARDINFO.birthday">
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label"><i>*</i>年龄</div>
+          <div class="control">
+            <input type="text" disabled placeholder="年龄" v-model="IDCARDINFO.age">
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label"><i>*</i>证件号码</div>
+          <div class="control">
+            <input type="text" disabled placeholder="证件号码" v-model="IDCARDINFO.identityCard">
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label"><i>*</i>民族</div>
+          <div class="control">
+            <input type="text" disabled placeholder="民族" v-model="IDCARDINFO.nation">
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label"><i>*</i>籍贯</div>
+          <div class="control">
+            <input type="text" disabled placeholder="籍贯" v-model="IDCARDINFO.birthPlaceCode">
+          </div>
+        </div>
+        <div class="form-item">
+          <div class="label"><i>*</i>发证机关</div>
+          <div class="control">
+            <input type="text" disabled placeholder="发证机关" v-model="IDCARDINFO.cardAgency">
+          </div>
+        </div>
+        <div class="form-item half">
+          <div class="label"><i>*</i>身份证地址</div>
+          <div class="control">
+            <input type="text" disabled placeholder="身份证地址" v-model="IDCARDINFO.fullAddr">
+          </div>
+        </div>
+        <div class="form-item half-half">
+          <div class="label"><i>*</i>身份证有效期</div>
+          <div class="control">
+            <input type="text" disabled placeholder="身份证有效期" v-model="IDCARDINFO.startTime">
+            <span>至</span>
+            <input type="text" disabled placeholder="身份证有效期" v-model="IDCARDINFO.expireTime">
+          </div>
+        </div>
+      </div>
+      <div class="upload-wrapper flex-1">
+        <div v-show="!IDCARDINFO.icon" class="avatar">证件照</div>
+        <img v-show="IDCARDINFO.icon" class="avatar" :src="IDCARDINFO.icon" alt="">
+        <button @click="cardSubmit">读取身份证</button>
+      </div>
+    </div>
+    <!-- <button @click="upload">上传至七牛云</button> -->
+    <button @click="submitForm">提交表单</button>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+  <script>
+    var qiniuTokenUrl = 'https://api.ktpis.com/api/web/manage/QiNiu/getQiNiuUpdateToken';//获取七牛云token
+    var qiniuUploadUrl = 'https://upload-z2.qiniup.com/'; // 上传七牛地址
+    var imgUrl = 'http://images.ktpis.com/'; // 显示图片前缀
+    var token = ''; // 七牛token
+    var vm = new Vue({
+      el: '#root',
+      data: {
+        videoVisiabled: 0,
+        visiabled_1: 0,
+        visiabled_2: 0,
+        visiabled_3: 0,
+        video: null,
+        images: [null, null, null],
+        IDCARDINFO: {},
+        userImages: {
+          faceUrl: '',
+          picturePositive: '',
+          pictureReverse: ''
+        }
+      },
+      mounted: function () {
+        var that = this
+        this.video = document.getElementsByTagName("video")[0]
+        var start = document.getElementById("start"), MediaStreamTrack;
+        start.addEventListener('click', function () {
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: true
+            }).then(function (stream) {
+              console.log(stream);
+              MediaStreamTrack = typeof stream.stop === 'function' ? stream : stream.getTracks()[1];
+              // video.src = (window.URL).createObjectURL(stream);
+              try {
+                that.video.srcObject = stream;
+              } catch (error) {
+                that.video.src = window.URL.createObjectURL(stream);
+              }
+              that.video.play();
+              that.videoVisiabled = 1
+            }).catch(function (err) {
+              console.log(err);
+              alert('未检测到摄像头')
+            });
+          } else if (navigator.getMedia) {
+            navigator.getMedia({
+              video: true
+            }).then(function (stream) {
+              console.log(stream);
+              MediaStreamTrack = stream.getTracks()[1];
+              // video.src = (window.webkitURL).createObjectURL(stream);
+              try {
+                that.video.srcObject = stream;
+              } catch (error) {
+                that.video.src = window.URL.createObjectURL(stream);
+              }
+              that.video.play();
+            }).catch(function (err) {
+              console.log(err);
+              alert('未检测到摄像头')
+            });
+          }
+        });
+        this.getToken()
+      },
+      methods: {
+        snap: function (id) {
+          if (!this.videoVisiabled) {
+            alert('请打开摄像头')
+            return
+          }
+          var canvas = document.getElementById('canvas-' + id)
+          var context = canvas.getContext('2d')
+          this['visiabled_' + id] = 1
+          context.drawImage(this.video, 0, 0, 200, 150)
+          var imgBase64 = canvas.toDataURL('image/jpeg', 0.5)
+          var file = this.dataURLtoFile(imgBase64, this.getImgName())
+          var index = id - 1
+          this.images.splice(index, 1, file)
+          this.upload(index, file)
+          // console.log(this.images)
+        },
+        getImgName: function (type = '.jpg') {
+          const date = new Date()
+            .toLocaleDateString()
+            .split('/')
+            .join('')
+          const time = new Date().getTime()
+          return date + '-' + time + type
+        },
+        dataURLtoFile(dataurl, filename) {
+          // 将base64转换为文件，dataurl为base64字符串，filename为文件名（必须带后缀名，如.jpg,.png）
+          var arr = dataurl.split(',')
+          var mime = arr[0].match(/:(.*?);/)[1]
+          var bstr = atob(arr[1])
+          var n = bstr.length
+          var u8arr = new Uint8Array(n)
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n)
+          }
+          return new File([u8arr], filename, { type: mime })
+        },
+
+        // 上传至七牛云
+        upload: function (index, file) {
+          var that = this
+          var formData = new FormData();
+          formData.append('file', file);
+          formData.append('key', file.name)
+          formData.append('token', token)
+          this.request({
+            method: 'POST',
+            url: qiniuUploadUrl,
+            params: formData
+          }, function (res) {
+            var imgSrc = imgUrl + res.key //// 七牛上传成功后图片地址
+            if (index == 0) {
+              that.userImages.faceUrl = imgSrc
+            } else if (index == 1) {
+              that.userImages.picturePositive = imgSrc
+            } else {
+              that.userImages.pictureReverse = imgSrc
+            }
+          }, function (err) {
+            alert('上传失败')
+          })
+        },
+        // 获取七牛云token
+        getToken: function () {
+          this.request({
+            method: 'POST',
+            url: qiniuTokenUrl
+          }, function (res) {
+            token = res.data
+          }, function (err) {
+            alert('获取token失败')
+          })
+        },
+        /* request: {
+            method: 请求方法
+            url: 请求地址
+            params: 请求参数
+        }*/
+        request: function (request, success, error) {
+          var xhr = new XMLHttpRequest()
+          xhr.open(request.method, request.url, true)
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+              if (xhr.status === 200) {
+                // 请求成功返回接口数据
+                success(JSON.parse(xhr.responseText))
+              } else {
+                var errorData = {
+                  code: xhr.status,
+                  response: xhr.response
+                }
+                error(errorData)
+              }
+            }
+          }
+          // 发送请求
+          xhr.send(request.params || '')
+        },
+        // 获取身份证信息
+        cardSubmit: function () {
+          var that = this
+          this.request({
+            method: 'GET',
+            url: 'http://localhost:8989/api/ReadMsg?waitTime=3'
+          }, function (res) {
+            if (res.code === '0') {
+              // console.log('获取身份证信息', res)
+              var data = {
+                realName: res.name,
+                gender: res.sex === '男' ? 1 : 2,
+                birthday: that.formatDate(res.born),
+                age: that.computeAge(res.born),
+                identityCard: res.cardno,
+                nation: res.nation,
+                birthPlaceCode: res.address.split('省')[0] + '省',
+                cardAgency: res.police,
+                fullAddr: res.address,
+                icon: 'data:image/jpeg;base64,' + res.photobase64,
+                startTime: that.formatDate(res.userlifeb),
+                expireTime: that.formatDate(res.userlifee)
+              }
+              that.IDCARDINFO = { ...data }
+            } else {
+              alert('读居民身份证操作失败！')
+            }
+          }, function (err) {
+            alert('获取获取身份证信息失败')
+          })
+        },
+        // 格式化时间
+        formatDate(str) {
+          if (!str) return ''
+          if (str.indexOf('长期') > -1) return str
+          return [str.substr(0, 4), str.substr(4, 2), str.substr(6, 2)].join('-')
+        },
+        // 计算年龄
+        computeAge(str) {
+          if (!str) return ''
+          const year = str.substr(0, 4)
+          const now = new Date().getFullYear()
+          return now - year
+        },
+        submitForm: function () {
+          var errType = ''
+          if (this.userImages.faceUrl == '') {
+            alert('请先采集人脸照片')
+            return
+          } else if (this.userImages.picturePositive == '') {
+            alert('请先采集证件正面照片')
+            return
+          } else if (this.userImages.pictureReverse == '') {
+            alert('请先采集证件反面照片')
+            return
+          }
+          if (!this.IDCARDINFO.realName || !this.IDCARDINFO.identityCard || !this.IDCARDINFO.icon) {
+            alert('请读取身份证信息')
+            return
+          }
+          var data = { ...this.userImages, ...this.IDCARDINFO }
+          if (this.IDCARDINFO.expireTime.indexOf('长期') > -1) {
+            data.expireTime = '9999-12-31 00:00:00'
+          }
+          console.log(data)
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>七牛云JS前台上传文件，后台获取token</title>
+    <style>
+        #box{
+            margin-top: 20px;
+        }
+        #box img{
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <form method="post" enctype="multipart/form-data">
+        <label>选择图片：</label>
+        <input id="file" name="imgfile" type="file" accept="image/gif, image/jpeg, image/png" />
+        <input name="upload" type="button" value="上传" id="upload" />
+
+        <input name="readIDCard" type="button" value="读身份证" id="readIDCard"/>
+    </form>
+    <!-- 图片显示区域 -->
+    <div id="box"><span></span></div>
+    <script>
+        // 定义请求地址等
+        var qiniuTokenUrl = 'https://api.ktpis.com/api/web/manage/QiNiu/getQiNiuUpdateToken';//获取七牛云token
+        var qiniuUploadUrl = 'https://upload-z2.qiniup.com/'; // 上传七牛地址
+        var imgUrl = 'http://images.ktpis.com/'; // 显示图片前缀
+        var token = ''; // 七牛token
+        // 页面加载完获取token
+        window.onload = function() {
+            getToken()
+        }
+        // 表单提交
+        function formSubmit (e) {
+            // console.log(token)
+            // 获取文件对象
+            var fileObj =  document.getElementById("file").files[0]
+            // console.log(fileObj)
+            // 图片最大5M
+            if(fileObj.size > 5*1024*1024) {
+                alert('图片不能超过5M')
+                return
+            }
+            // 创建表单数据
+            var formData = new FormData();
+            formData.append('file', fileObj);
+            formData.append('key', fileObj.name)
+            formData.append('token', token)
+            // 上传图片
+            request({
+                method: 'POST',
+                url: qiniuUploadUrl,
+                params: formData
+            }, function (res) {
+                var imgSrc = imgUrl + res.key //// 七牛上传成功后图片地址
+                // 将图片添加到页面
+                var div = document.getElementById('box');
+                var divImg = document.createElement('img');
+                divImg.src = imgSrc;
+                div.appendChild(divImg);
+                alert("上传成功！");
+                // console.log('imgSrc',imgSrc)
+            }, function (err) {
+                alert('上传失败')
+            })
+        }
+        // 获取七牛云token
+        function getToken () {
+            request({
+                method: 'POST',
+                url: qiniuTokenUrl
+            }, function (res) {
+                token = res.data
+            }, function (err) {
+                alert('获取token失败')
+            })
+        }
+
+           // 获取身份证信息
+           function cardSubmit () {
+            request({
+                method: 'GET',
+                url: 'http://localhost:8989/api/ReadMsg?waitTime=3'
+            }, function (res) {
+                if (res.code === '0') {
+                console.log('获取身份证信息',res)
+                }else{
+                    alert('读居民身份证操作失败！') 
+                }
+          
+            }, function (err) {
+                alert('获取获取身份证信息失败')
+            })
+        }
+        // 封装请求方法
+        /* request: {
+            method: 请求方法
+            url: 请求地址
+            params: 请求参数
+        }*/
+        function request(request,success, error) {
+            var xhr = new XMLHttpRequest()
+            xhr.open(request.method, request.url, true)
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        // 请求成功返回接口数据
+                        success(JSON.parse(xhr.responseText))
+                    } else {
+                        var errorData = {
+                            code: xhr.status,
+                            response: xhr.response
+                        }
+                        error(errorData)
+                    }
+                }
+            }
+            // 发送请求
+            xhr.send(request.params || '')
+        }
+        document.getElementById('upload').onclick = function () {
+           formSubmit()
+        }
+
+        document.getElementById('readIDCard').onclick = function () {
+            cardSubmit()
+        }
+    </script>
+</body>
+</html>
