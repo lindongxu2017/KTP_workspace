@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Color 色彩",
+    "desc": "为了避免视觉传达差异，使用一套特定的调色板来规定颜色，为你所搭建的产品提供一致的外观视觉感受。",
+    "component": "ktpColor",
+    "name": "ktpColor",
+    "path": "/ktpColor"
+  },
+  {
+    "title": "Button 按钮",
+    "desc": "常用的操作按钮。",
+    "component": "ktpButton",
+    "name": "ktpButton",
+    "path": "/ktpButton"
+  },
+  {
+    "title": "Radio 单选框",
+    "desc": "在一组备选项中进行单选",
+    "component": "ktpRadio",
+    "name": "ktpRadio",
+    "path": "/ktpRadio"
+  },
+  {
+    "title": "Input 输入框",
+    "desc": "通过鼠标或键盘输入字符",
+    "component": "ktpInput",
+    "name": "ktpInput",
+    "path": "/ktpInput"
+  }
+]
